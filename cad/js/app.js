@@ -1429,7 +1429,7 @@
   }
   function updateTitle() {
     $('#fileName').textContent = (S.dirty ? '● ' : '') + S.fileName;
-    document.title = (S.dirty ? '● ' : '') + S.fileName + ' — Sierpes CAD';
+    document.title = (S.dirty ? '● ' : '') + S.fileName + ' — ' + ((window.CAD_CONFIG && window.CAD_CONFIG.nombre) || 'Sierpes CAD');
   }
 
   function buildToolbox() {
