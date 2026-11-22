@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sierpes CAD</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">Sierpes <b>CAD</b></div>
+  <div class="group">
+    <button data-act="new" title="Nuevo dibujo">Nuevo</button>
+    <button data-act="open" title="Abrir plano DXF, PDF o imagen (Ctrl+O)">Abrir…</button>
+    <button data-act="save" title="Guardar como DXF (Ctrl+S)">Guardar DXF</button>
+    <div class="menu">
+      <button title="Exportar">Exportar ▾</button>
+      <div class="menu-items">
+        <button data-act="export-svg">SVG (vectorial)</button>
+        <button data-act="export-png">PNG (vista actual)</button>
+        <button data-act="print">Imprimir / PDF</button>
+      </div>
+    </div>
+  </div>
+  <div class="group">
+    <button data-act="undo" title="Deshacer (Ctrl+Z)">↶</button>
+    <button data-act="redo" title="Rehacer (Ctrl+Y)">↷</button>
+    <button data-act="delete" title="Borrar selección (Supr)">Borrar</button>
+    <button data-act="explode" title="Descomponer bloques seleccionados">Descomponer</button>
+  </div>
+  <div class="group">
+    <button data-act="zoom-ext" title="Ver todo (Z)">Ver todo</button>
+    <button data-act="theme" title="Cambiar fondo claro/oscuro">Fondo</button>
+    <button data-act="help" title="Ayuda y atajos (F1)">Ayuda</button>
+  </div>
+  <div class="file-name" id="fileName">sin título</div>
+  <button id="sideToggle" data-act="side" title="Mostrar/ocultar paneles">☰</button>
+</header>
+
+<div id="main">
+  <nav id="toolbox" aria-label="Herramientas"></nav>
+  <div id="canvasWrap">
+    <canvas id="cv" tabindex="0"></canvas>
+    <div id="dropHint" hidden>Suelte aquí el plano (DXF, PDF o imagen)</div>
+    <div id="welcome">
+      <h2>Abrir un plano</h2>
+      <p>Arrastre un archivo <b>DXF</b> aquí o pulse <b>Abrir…</b>.<br>
+      También puede abrir un <b>PDF</b> o una <b>imagen</b> como plantilla para calcar a escala.</p>
+      <p class="small">¿Tiene un DWG? Guárdelo como DXF desde su programa o conviértalo con un conversor gratuito (ODA File Converter).</p>
+      <div class="row">
+        <button data-act="open" class="primary">Abrir archivo…</button>
+        <button data-act="sample">Ver plano de ejemplo</button>
+      </div>
+    </div>
+  </div>
+  <aside id="side">
+    <section>
+      <h3>Capas <button class="mini" data-act="add-layer" title="Nueva capa">+</button></h3>
+      <div id="layers"></div>
+    </section>
+    <section>
+      <h3>Propiedades</h3>
+      <div id="props"></div>
+    </section>
+    <section id="underlayPanel" hidden>
+      <h3>Imagen de fondo</h3>
+      <label class="field">Opacidad <input type="range" id="ulOpacity" min="0.05" max="1" step="0.05" value="0.6"></label>
+      <div class="row">
+        <button data-act="calibrate" title="Escalar la imagen indicando una distancia conocida">Calibrar escala</button>
+        <button data-act="move-underlay">Mover</button>
+        <button data-act="remove-underlay">Quitar</button>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<footer id="status">
+  <span id="coords">0, 0</span>
+  <span id="prompt">Listo</span>
+  <input id="cmd" autocomplete="off" spellcheck="false" placeholder="Comando o coordenadas (p. ej. L, 100,50, @200<45)">
+  <span class="toggles">
+    <button data-toggle="snap" title="Referencia a objetos (F3)">REFENT</button>
+    <button data-toggle="ortho" title="Modo ortogonal (F8)">ORTO</button>
+    <button data-toggle="grid" title="Rejilla (F7)">REJILLA</button>
+  </span>
+  <select id="units" title="Unidades del dibujo">
+    <option value="0">Sin unidad</option>
+    <option value="4">mm</option>
+    <option value="5">cm</option>
+    <option value="6">m</option>
+  </select>
+</footer>
+
+<input type="file" id="fileInput" accept=".dxf,.pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp" hidden>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlgForm">
+    <h3 id="dlgTitle"></h3>
+    <div id="dlgBody"></div>
+    <div class="row end">
+      <button type="button" id="dlgCancel">Cancelar</button>
+      <button value="ok" class="primary" id="dlgOk">Aceptar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="help">
+  <h3>Ayuda rápida</h3>
+  <div class="help-cols">
+    <div>
+      <h4>Ratón</h4>
+      <ul>
+        <li><b>Rueda</b>: zoom · <b>botón central</b> o herramienta Mano: desplazar</li>
+        <li><b>Clic</b>: seleccionar · <b>Mayús+clic</b>: añadir/quitar</li>
+        <li><b>Arrastrar</b> a la derecha: ventana (objetos dentro) · a la izquierda: captura (objetos que toca)</li>
+        <li>Arrastre los <b>cuadrados azules</b> (pinzamientos) para modificar puntos</li>
+        <li><b>Doble clic</b> en un texto: editarlo</li>
+        <li><b>Clic derecho</b>: terminar el comando (como Intro)</li>
+      </ul>
+      <h4>Coordenadas (escríbalas y pulse Intro)</h4>
+      <ul>
+        <li><code>100,50</code> punto absoluto</li>
+        <li><code>@100,0</code> relativo al último punto</li>
+        <li><code>@250&lt;45</code> distancia y ángulo</li>
+        <li><code>300</code> distancia en la dirección del cursor</li>
+        <li>El decimal es el punto: <code>12.5</code></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Comandos</h4>
+      <table id="helpCmds"></table>
+      <h4>Teclas</h4>
+      <ul>
+        <li><b>Esc</b> cancelar · <b>Intro/Espacio</b> terminar o repetir</li>
+        <li><b>Supr</b> borrar · <b>Ctrl+Z / Ctrl+Y</b> deshacer/rehacer</li>
+        <li><b>Ctrl+S</b> guardar · <b>Ctrl+O</b> abrir · <b>Ctrl+A</b> seleccionar todo</li>
+        <li><b>F3</b> referencias · <b>F7</b> rejilla · <b>F8</b> ortogonal</li>
+      </ul>
+    </div>
+  </div>
+  <form method="dialog" class="row end"><button class="primary">Cerrar</button></form>
+</dialog>
+
+<div id="toast" hidden></div>
+
+<script src="js/aci.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/dxf-parser.js"></script>
+<script src="js/dxf-writer.js"></script>
+<script src="js/sample.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
