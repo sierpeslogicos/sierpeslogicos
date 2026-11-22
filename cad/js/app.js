@@ -1538,7 +1538,10 @@
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
-    if (ext === 'dwg' || window.DWG.isDwg(head)) { await loadDwg(file); return; }
+    if (ext === 'dwg' || (window.DWG ? window.DWG.isDwg(head) : /^AC10\d\d/.test(String.fromCharCode(...head.slice(0, 6))))) {
+      if (!window.DWG) { toast('Esta versión no abre DWG. Guárdelo como DXF desde su programa CAD (AutoCAD: «Guardar como» → DXF) y ábralo aquí.', 9000); return; }
+      await loadDwg(file); return;
+    }
     if (ext === 'dxf') {
       if (S.dirty && !confirm('Hay cambios sin guardar. ¿Descartarlos y abrir el archivo?')) return;
       try {
@@ -1596,8 +1599,9 @@
     try {
       toast('Cargando PDF…', 20000);
       if (!window.pdfjsLib) {
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const base = (window.CAD_CONFIG && window.CAD_CONFIG.pdfjs) || 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
+        await loadScript(base + '/pdf.min.js');
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + '/pdf.worker.min.js';
       }
       const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
       let n = 1;
@@ -1796,13 +1800,19 @@
   zoomTo(null);
   changed();
 
-  // API mínima para pruebas automatizadas y depuración
+  // API para integrar el editor en otras aplicaciones (y para pruebas automatizadas)
   window.SierpesCAD = {
     state: S, view: V,
     load: (text, name) => loadDXFText(text, name || 'prueba.dxf'),
+    openFile,
     dxf: () => DXF.write({ entities: S.entities, layers: S.layers, units: S.units }),
     svg: buildSVG,
     exec: execCmd,
+    toast,
+    setFileName: name => { S.fileName = name; updateTitle(); },
+    markSaved: () => { S.dirty = false; updateTitle(); },
+    isDirty: () => S.dirty,
     w2s, s2w
   };
+  document.dispatchEvent(new CustomEvent('sierpescad:listo'));
 })();
