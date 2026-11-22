@@ -1603,7 +1603,8 @@
         await loadScript(base + '/pdf.min.js');
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + '/pdf.worker.min.js';
       }
-      const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      // isEvalSupported: false — mitigación de CVE-2024-4367 (ejecución de código con un PDF malicioso en pdf.js < 4.2.67): pdf.js no compila fuentes con eval/Function.
+      const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
       let n = 1;
       if (pdf.numPages > 1) {
         const r = await ask('PDF de varias páginas', [{ name: 'p', label: `Página a abrir (1–${pdf.numPages})`, type: 'number', value: 1 }]);
