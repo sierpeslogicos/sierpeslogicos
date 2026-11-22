@@ -11,7 +11,7 @@
   <div class="brand">Sierpes <b>CAD</b></div>
   <div class="group">
     <button data-act="new" title="Nuevo dibujo">Nuevo</button>
-    <button data-act="open" title="Abrir plano DXF, PDF o imagen (Ctrl+O)">Abrir…</button>
+    <button data-act="open" title="Abrir plano DWG, DXF, PDF o imagen (Ctrl+O)">Abrir…</button>
     <button data-act="save" title="Guardar como DXF (Ctrl+S)">Guardar DXF</button>
     <div class="menu">
       <button title="Exportar">Exportar ▾</button>
@@ -41,12 +41,12 @@
   <nav id="toolbox" aria-label="Herramientas"></nav>
   <div id="canvasWrap">
     <canvas id="cv" tabindex="0"></canvas>
-    <div id="dropHint" hidden>Suelte aquí el plano (DXF, PDF o imagen)</div>
+    <div id="dropHint" hidden>Suelte aquí el plano (DWG, DXF, PDF o imagen)</div>
     <div id="welcome">
       <h2>Abrir un plano</h2>
-      <p>Arrastre un archivo <b>DXF</b> aquí o pulse <b>Abrir…</b>.<br>
+      <p>Arrastre un archivo <b>DWG</b> o <b>DXF</b> aquí o pulse <b>Abrir…</b>.<br>
       También puede abrir un <b>PDF</b> o una <b>imagen</b> como plantilla para calcar a escala.</p>
-      <p class="small">¿Tiene un DWG? Guárdelo como DXF desde su programa o conviértalo con un conversor gratuito (ODA File Converter).</p>
+      <p class="small">Los cambios se guardan en DXF, que AutoCAD y el resto de programas CAD abren directamente.</p>
       <div class="row">
         <button data-act="open" class="primary">Abrir archivo…</button>
         <button data-act="sample">Ver plano de ejemplo</button>
@@ -91,7 +91,7 @@
   </select>
 </footer>
 
-<input type="file" id="fileInput" accept=".dxf,.pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp" hidden>
+<input type="file" id="fileInput" accept=".dwg,.dxf,.pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp" hidden>
 
 <dialog id="dlg">
   <form method="dialog" id="dlgForm">
@@ -147,6 +147,7 @@
 <script src="js/geometry.js"></script>
 <script src="js/dxf-parser.js"></script>
 <script src="js/dxf-writer.js"></script>
+<script src="js/dwg.js"></script>
 <script src="js/sample.js"></script>
 <script src="js/app.js"></script>
 </body>

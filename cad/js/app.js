@@ -1537,7 +1537,8 @@
   async function openFile(file) {
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (ext === 'dwg') { toast('Los archivos DWG no se pueden abrir directamente. Guárdelo como DXF desde su programa CAD o conviértalo con ODA File Converter (gratuito).', 9000); return; }
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    if (ext === 'dwg' || window.DWG.isDwg(head)) { await loadDwg(file); return; }
     if (ext === 'dxf') {
       if (S.dirty && !confirm('Hay cambios sin guardar. ¿Descartarlos y abrir el archivo?')) return;
       try {
@@ -1548,7 +1549,21 @@
     }
     if (ext === 'pdf') { await loadPdf(file); return; }
     if (/^(png|jpe?g|gif|webp|bmp|svg)$/.test(ext) || (file.type || '').startsWith('image/')) { await loadImage(file); return; }
-    toast('Formato no reconocido. Use DXF, PDF o una imagen.');
+    toast('Formato no reconocido. Use DWG, DXF, PDF o una imagen.');
+  }
+
+  async function loadDwg(file) {
+    if (S.dirty && !confirm('Hay cambios sin guardar. ¿Descartarlos y abrir el archivo?')) return;
+    const first = !window.DWG.loaded;
+    toast(first ? 'Abriendo DWG… (la primera vez se descarga el lector, unos segundos)' : 'Abriendo DWG…', 60000);
+    try {
+      const text = await window.DWG.readAsDxf(await file.arrayBuffer());
+      window.DWG.loaded = true;
+      if (loadDXFText(text, file.name)) {
+        const t = $('#toast').textContent;
+        toast(t + ' Al guardar se creará un DXF (AutoCAD lo abre y puede volver a guardarlo como DWG).', 9000);
+      }
+    } catch (err) { toast('No se pudo abrir el DWG: ' + err.message, 9000); }
   }
 
   function setUnderlay(img, wWorld, hWorld) {
@@ -1611,7 +1626,7 @@
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
-  const baseName = () => S.fileName.replace(/\.(dxf|pdf|png|jpe?g)$/i, '') || 'plano';
+  const baseName = () => S.fileName.replace(/\.(dxf|dwg|pdf|png|jpe?g)$/i, '') || 'plano';
 
   async function saveDXF() {
     if (tool) endTool();

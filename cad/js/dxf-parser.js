@@ -12,7 +12,7 @@
     const bytes = new Uint8Array(buf);
     const head = new TextDecoder('latin1').decode(bytes.slice(0, 22));
     if (head.startsWith('AutoCAD Binary DXF')) throw new Error('DXF binario no soportado. Guárdelo como DXF ASCII desde su programa CAD.');
-    if (/^AC10\d\d/.test(head)) throw new Error('Es un archivo DWG. Conviértalo a DXF (por ejemplo con ODA File Converter, LibreCAD o el propio AutoCAD: "Guardar como DXF").');
+    if (/^AC10\d\d/.test(head)) throw new Error('Es un archivo DWG; ábralo con extensión .dwg.');
     try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
     catch (e) { return new TextDecoder('windows-1252').decode(bytes); }
   }
